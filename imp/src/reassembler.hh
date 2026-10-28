@@ -6,10 +6,6 @@
 
 using namespace std;
 
-struct Segment{
-  uint64_t index;
-  std::string data;
-};
 
 class Reassembler
 {
@@ -57,11 +53,10 @@ public:
   const Writer& writer() const { return output_.writer(); }
 
 private:
-  Segment checkstore(uint64_t index, std::string data);
   void write(uint64_t first_index, string data);
   ByteStream output_;
   uint64_t capacity_;
   u_int64_t next_index;
   int last_index;
-  std::map<uint64_t, Segment> tmp_store;
+  std::map<uint64_t, char> tmp_store;
 };
