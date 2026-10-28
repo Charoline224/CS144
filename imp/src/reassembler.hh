@@ -3,7 +3,7 @@
 #include "byte_stream.hh"
 #include <map>
 #include <string>
-
+#include <vector>
 using namespace std;
 
 
@@ -16,7 +16,8 @@ public:
     capacity_(output.capacity()),
     next_index(0),
     last_index(-1), 
-    tmp_store{}
+    tmp_store(capacity_),
+    received(capacity_)
      {}
 
   /*
@@ -58,5 +59,6 @@ private:
   uint64_t capacity_;
   u_int64_t next_index;
   int last_index;
-  std::map<uint64_t, char> tmp_store;
+  std::vector<char> tmp_store;
+  std::vector<bool> received;
 };

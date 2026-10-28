@@ -41,21 +41,21 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   if(is_last_substring){
     last_index = first_index + data.size();
   }
+
   //先存储
   for(uint64_t i = max(first_index, next_index); i < min(window_end, first_index + data.size()); i++){
-    if(tmp_store.find(i) != tmp_store.end())continue;
-    tmp_store[i] = data[i - first_index];
+    tmp_store[i%capacity_] =  data[i - first_index];
+    received[i%capacity_] = true;
   }
-  
   //再开始写入
   string ready;
   //持续寻找连续
-  uint64_t i = next_index;
-  while(tmp_store.find(i) != tmp_store.end()){
-    auto n = tmp_store.find(i);
-    ready += n->second;
-    i++;
-    tmp_store.erase(n);
+  for(uint64_t i = next_index; i < window_end; i++) {
+    if(!received[i%capacity_]){
+      break;
+    }
+    ready += tmp_store[i%capacity_];
+    received[i%capacity_] = false;
   }
   write(next_index, ready);
 }
@@ -64,49 +64,16 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
 
 
 
-//   //已经添加过的片段跳过
-//   if(first_index + data.size() <  next_index)return;
-//   //检查有没有合适的/重复的,找到本次处理的seg
-//   Segment seg = checkstore(first_index, data, is_last_substring);
-//       first_index = seg.index;
-//       data = seg.data;
-//       is_last_substring = seg.is_last;
-//   const u_int64_t data_size = data.size();
-//   //符合要求，开始写
-//   if (first_index <= next_index ){
-//     uint64_t from = next_index - first_index;
-//     u_int64_t index = from;
-//     while(index < data_size && output_.writer().available_capacity() > 0){
-//       u_int64_t size = data_size - index;
-//       size_t out_len = min(output_.writer().available_capacity(), size);
-//       output_.writer().push(data.substr(index, out_len));
-//       index += out_len;
-//     }
-//     next_index += (index - from);
-//     //写不下的：
-//     if(index < data_size-1){
-//       Segment more  = Segment{index+1, data.substr(index, data_size - index), is_last_substring};
-//       store(more);
-//     }else{
-//         //写到最后一调，关闭output
-//       if(is_last_substring){
-//         output_.writer().close();
-//       }
-//     }
-//   }else {
-//     min_store_idx = min(min_store_idx, first_index);
-//     store(seg);
-//   }
-
-// }
-
-
 
 
 // How many bytes are stored in the Reassembler itself?
 // This function is for testing only; don't add extra state to support it.
 uint64_t Reassembler::count_bytes_pending() const
 {
-  uint64_t total = tmp_store.size();
+  
+  uint64_t total = 0;
+  for(uint64_t i  = 0; i < capacity_; i++){
+    if(received[i])total++;
+  }
   return total;
 }
